@@ -1,19 +1,55 @@
 package restAssured;
 
-import org.json.JSONArray;
+import static io.restassured.RestAssured.get;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItems;
+
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 
 public class RestApiTests {
+	
+	/*
+	 * This before class can be setup ahead so that we don't need to specify the 
+	 * entire URL in the tests each time as displayed in 'testVerifyGetMethod' method below.
+	 */
+	
+	@BeforeClass
+	public static void setup() {
+		String port = System.getProperty("server.port");
+		if (port == null) {
+			RestAssured.port = Integer.valueOf(443);
+		} else {
+			RestAssured.port = Integer.valueOf(port);
+		}
 
+		String basePath = System.getProperty("server.base");
+		if (basePath == null) {
+			basePath = "/data/2.5";
+		}
+		RestAssured.basePath = basePath;
+
+		String baseHost = System.getProperty("server.host");
+		if (baseHost == null) {
+			baseHost = "https://samples.openweathermap.org";
+		}
+		RestAssured.baseURI = baseHost;
+
+	}	
+
+	/*
+	 * Test to verify Get method verifying status code and name in the body
+	 */
+	
 	@Test
+	public void testVerifyGetMethod() {
 
-	public void test_200_ok() {
-
-		Response response = RestAssured.get("https://samples.openweathermap.org/data/2.5/weather?q=London,"
+		Response response = get("/weather?q=London,"
 
 				+ "uk&appid=b6907d289e10d714a6e88b30761fae22");
 
@@ -27,8 +63,6 @@ public class RestApiTests {
 
 		System.out.println("Body is: " + body);
 
-		// Map<String, String> map = json.loads(response.text);
-
 		System.out.println("Status code is: " + code);
 
 		Assert.assertEquals(code, 200);
@@ -36,120 +70,86 @@ public class RestApiTests {
 		assert (body.contains("London"));
 
 	}
-
+	
+	/*
+	 * Test to verify status code 200 OK when Get to correct URL is requested
+	 */
+	
 	@Test
-
-	public void testVerifyResponseContent() {
-
-		Response response = RestAssured.get("https://samples.openweathermap.org/data/2.5/weather?q=London,"
-
-				+ "uk&appid=b6907d289e10d714a6e88b30761fae22");
-
-		JSONArray JSONResponseBody = new JSONArray(response.getBody().asString());
-
-		System.out.println(JSONResponseBody);
-
-		Assert.assertEquals(JSONResponseBody.getJSONObject(0).getString("name"), "London");
-
-		/*
-		 * 
-		 * final JSONArray itemList = (JSONArray) response;
-		 * 
-		 * 
-		 * 
-		 * System.out.println(itemList.toString());
-		 * 
-		 * //HashMap<String, String> map = new HashMap<String, String>();
-		 * 
-		 * 
-		 * 
-		 * //JSONObject jObject = new JSONObject(body);
-		 * 
-		 * //Iterator<?> keys = jObject.keys();
-		 * 
-		 * 
-		 * 
-		 * if (itemList != null) {
-		 * 
-		 * 
-		 * 
-		 * for (int i = itemList.length() - 1; i >= 0; i--) {
-		 * 
-		 * 
-		 * 
-		 * final JSONObject obj = (JSONObject) itemList.get(i);
-		 * 
-		 * final JSONObject content = obj.getJSONObject("co  ntent");
-		 * 
-		 * if (content != null) {
-		 * 
-		 * final String text = content.getString("feedback");
-		 * 
-		 * if (StringUtils.equals(text, "name")) {
-		 * 
-		 * System.out.println("Found matched feedback.");
-		 * 
-		 * //String result = content.getInt("id");
-		 * 
-		 * break;
-		 * 
-		 * }
-		 * 
-		 * 
-		 * 
-		 * }
-		 * 
-		 * 
-		 * 
-		 * }
-		 * 
-		 * 
-		 * 
-		 * 
-		 * 
-		 * 
-		 * 
-		 * }
-		 * 
-		 * 
-		 * 
-		 */
-
-		/*
-		 * try {
-		 * 
-		 * 
-		 * 
-		 * while( keys.hasNext() ){
-		 * 
-		 * String key = (String)keys.next();
-		 * 
-		 * String value = (String)jObject.getString(key);
-		 * 
-		 * map.put(key, value);
-		 * 
-		 * }
-		 * 
-		 * 
-		 * 
-		 * } catch (JSONException e) {
-		 * 
-		 * // TODO: handle exception
-		 * 
-		 * }
-		 * 
-		 * 
-		 * 
-		 * 
-		 * 
-		 * String city = map.get("name");
-		 * 
-		 * 
-		 * 
-		 * System.out.println(city);
-		 * 
-		 */
-
+	public void testStatusCode200() {
+		
+		given().when().get("https://www.google.com/").then().statusCode(200);
+		
 	}
+	
+	/*
+	 * Test to verify status code 404 Not Found when Get to incorrect URL is requested
+	 */
+	
+	@Test
+	public void testStatusCode404() {
+		
+		given().when().get("https://www.google.com/bhavik").then().statusCode(404);
+		
+	}
+	
+	/*
+	 * Test to verify the value of field 'name' equals to 'London' in the body of response
+	 */
+	
+	@Test
+	public void testVerifyNameInResponseContent() {
+		
+		given().when().get("https://samples.openweathermap.org/data/2.5/weather?q=London,"
+
+				+ "uk&appid=b6907d289e10d714a6e88b30761fae22").then().body("name", equalTo("London"));		
+		
+	}
+	
+	/*
+	 * Test to verify the value of field 'description' under 'weather' equals to 'light intensity drizzle' in the body of response
+	 */
+	
+	@Test
+	public void testVerifyWeatherDescInResponseContent() {
+		
+		given().when().get("https://samples.openweathermap.org/data/2.5/weather?q=London,"
+
+				+ "uk&appid=b6907d289e10d714a6e88b30761fae22").then().body("weather[0].description", equalTo("light intensity drizzle"));		
+		
+	}
+	
+	/*
+	 * Test to verify multiple values in the body of response in a single test:
+	 * 1. field 'description' under 'weather' equals to 'light intensity drizzle'
+	 * 2. Status code is 200
+	 * 3. field 'name' equals to 'London'
+	 */
+	
+	@Test
+	public void testVerifyMultipleValues() {
+		
+		given().when().get("https://samples.openweathermap.org/data/2.5/weather?q=London,"
+
+				+ "uk&appid=b6907d289e10d714a6e88b30761fae22").then()
+		.body("weather[0].description", equalTo("light intensity drizzle"))
+		.body("name", equalTo("London"))
+		.statusCode(200);	
+		
+	}
+	
+	/*
+	 * Test to verify the multiple values of field 'name' under 'list'in the body of response using hasItems
+	 * names: Yafran, Zuwarah, Ragusa, etc.
+	 */
+	
+	@Test
+	public void testVerifyMultipleFieldValues() {
+		
+		given().when().get("/box/city?bbox=12,32,15,37,10&appid=b6907d289e10d714a6e88b30761fae22").then()
+			.body("list.name", hasItems("Yafran","Zuwarah","Ragusa"));		
+		
+	}
+
 
 }
