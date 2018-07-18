@@ -82,6 +82,24 @@ public class RestApiTests {
 		
 	}
 	
+	@Test
+	public void test2StatusCode200() {
+		
+		Response string = given().when().get("http://localhost:3000/posts");
+		
+		System.out.println(string.asString());
+		
+	}
+	
+	@Test
+	public void testPostMethod() {
+		
+		given().when().post("http://localhost:3000/posts").body();
+		
+		
+		
+	}
+	
 	/*
 	 * Test to verify status code 404 Not Found when Get to incorrect URL is requested
 	 */
