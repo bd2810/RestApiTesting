@@ -5,6 +5,7 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
 
+import org.json.JSONObject;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -91,15 +92,6 @@ public class RestApiTests {
 		
 	}
 	
-	@Test
-	public void testPostMethod() {
-		
-		given().when().post("http://localhost:3000/posts").body();
-		
-		
-		
-	}
-	
 	/*
 	 * Test to verify status code 404 Not Found when Get to incorrect URL is requested
 	 */
@@ -166,6 +158,34 @@ public class RestApiTests {
 		
 		given().when().get("/box/city?bbox=12,32,15,37,10&appid=b6907d289e10d714a6e88b30761fae22").then()
 			.body("list.name", hasItems("Yafran","Zuwarah","Ragusa"));		
+		
+	}
+	
+	/*
+	 * Test to verify Post method creates a post and returns status code 201 for created.
+	 */
+	@Test
+	public void testPostMethod() {
+		
+		JSONObject objects = new JSONObject();
+		objects.put("id", 2);
+		objects.put("title", "first-post");
+		objects.put("author", "Mark");
+		
+		given().contentType("application/json").body(objects.toString()).when().post("http://localhost:3000/posts").then().statusCode(201);	
+		
+	}
+	
+	/*
+	 * Test to verify Post method creates a post and returns status code 201 for created.
+	 */
+	@Test
+	public void testVerifyValuesfromAbovePostMethod() {
+		
+		given().when().get("http://localhost:3000/posts/2").then()
+		.body("id", equalTo(2))
+		.body("title", equalTo("first-post"))
+		.body("author", equalTo("Mark"));
 		
 	}
 
